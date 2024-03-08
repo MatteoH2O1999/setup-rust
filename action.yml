@@ -1,0 +1,22 @@
+name: Setup Rust
+author: MatteoH2O1999
+description: Action to install Rust in your Github Actions workflow
+branding:
+  icon: play-circle
+  color: blue
+inputs:
+  channel:
+    description: The rust release channel to install
+    default: stable
+  profile:
+    description: The rust profile to install (minimal, default or complete)
+    default: minimal
+  components:
+    description: The components to install
+    required: false
+outputs:
+  rustup-path:
+    description: The absolute path of the rustup binary
+runs:
+  using: node20
+  main: dist/index.js
