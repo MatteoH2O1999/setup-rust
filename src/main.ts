@@ -14,4 +14,42 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-export default async function main(): Promise<void> {}
+import * as core from '@actions/core';
+import * as io from '@actions/io';
+import getInstaller from './installers';
+import {parseInputs} from './inputs';
+import {toolname} from './constants';
+
+export default async function main(): Promise<void> {
+  const inputs = await parseInputs();
+  const installer = await getInstaller();
+  let rustupPath: string;
+
+  try {
+    rustupPath = await io.which(toolname);
+  } catch (error) {
+    rustupPath = '';
+  }
+
+  core.startGroup('Installing rustup');
+  if (rustupPath !== '') {
+    core.info('Rustup is already installed.');
+  } else {
+    await installer.installRustup();
+  }
+  core.endGroup();
+
+  core.startGroup('Setting profile');
+  await installer.setProfile(inputs.profile);
+  core.endGroup();
+
+  core.startGroup('Installing toolchain');
+  await installer.installChannel(inputs.channel);
+  core.endGroup();
+
+  core.startGroup('Installing additional components');
+  for (const component of inputs.components) {
+    await installer.installComponent(component);
+  }
+  core.endGroup();
+}

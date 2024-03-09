@@ -14,9 +14,6 @@ inputs:
   components:
     description: The components to install
     required: false
-outputs:
-  rustup-path:
-    description: The absolute path of the rustup binary
 runs:
   using: node20
   main: dist/index.js
