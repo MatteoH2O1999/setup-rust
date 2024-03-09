@@ -122,6 +122,8 @@ jobs:
           components: clippy rustfmt
       - name: Check rustup version
         run: rustup -V
+      - name: Check cargo version
+        run: cargo -V
 
   check_test_action:
     needs: test_action
