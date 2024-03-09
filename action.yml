@@ -1,4 +1,4 @@
-name: Setup Rust
+name: Setup Rustup and Rust
 author: MatteoH2O1999
 description: Action to install Rust in your Github Actions workflow
 branding:
