@@ -39,6 +39,10 @@ export default async function main(): Promise<void> {
   }
   core.endGroup();
 
+  core.startGroup('Clearing rustup installation');
+  await installer.clearInstallation();
+  core.endGroup();
+
   core.startGroup('Setting profile');
   await installer.setProfile(inputs.profile);
   core.endGroup();

@@ -16,26 +16,62 @@
 
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import * as io from '@actions/io';
 import {Profile} from '../inputs';
+import fs from 'fs';
+import path from 'path';
+import {toolname} from '../constants';
 
 export default abstract class Installer {
   abstract installRustup(): Promise<void>;
+
   async installChannel(channel: string): Promise<void> {
-    await exec.exec('rustup', [
+    await exec.exec(toolname, [
       'toolchain',
       'install',
       channel,
       '--allow-downgrade'
     ]);
-    core.info(`Toolchain ${channel} successfully installed.`);
+    core.info(`Toolchain "${channel}" successfully installed.`);
   }
+
   async setProfile(profile: Profile): Promise<void> {
-    await exec.exec('rustup', ['set', 'profile', profile]);
-    core.info(`Profile ${profile} is now new rutup profile.`);
+    await exec.exec(toolname, ['set', 'profile', profile]);
+    core.info(`Profile "${profile}" is now new rustup profile.`);
   }
+
   async installComponent(component: string): Promise<void> {
     core.info(`Installing component ${component}`);
-    await exec.exec('rustup', ['component', 'add', component]);
-    core.info(`Component ${component} successfully installed`);
+    await exec.exec(toolname, ['component', 'add', component]);
+    core.info(`Component "${component}" successfully installed`);
+  }
+
+  async clearInstallation(): Promise<void> {
+    const rustupPath = await io.which(toolname, true);
+    const binPath = path.dirname(rustupPath);
+    for (const file of fs.readdirSync(binPath)) {
+      if (!file.includes(toolname)) {
+        await io.rmRF(path.join(binPath, file));
+      }
+    }
+    await exec.exec(toolname, ['update']);
+
+    core.info('Collecting installed toolchains...');
+    const versionsOutput = await exec.getExecOutput(
+      toolname,
+      ['toolchain', 'list'],
+      {silent: true}
+    );
+    const versions = [];
+    for (const version of versionsOutput.stdout.split('\n')) {
+      if (version !== '') {
+        versions.push(version.split('(')[0].trim());
+      }
+    }
+
+    for (const toolchain of versions) {
+      core.info(`Uninstalling toolchain ${toolchain}`);
+      await exec.exec(toolname, ['toolchain', 'remove', toolchain]);
+    }
   }
 }
