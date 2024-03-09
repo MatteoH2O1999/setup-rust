@@ -52,6 +52,9 @@ export default async function main(): Promise<void> {
   core.endGroup();
 
   core.startGroup('Installing additional components');
+  if (inputs.components.length === 0) {
+    core.info('No additional components to install');
+  }
   for (const component of inputs.components) {
     await installer.installComponent(component);
   }
