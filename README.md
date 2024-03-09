@@ -1,5 +1,9 @@
 # Setup Rust
 
+[![CI/CD](https://github.com/MatteoH2O1999/setup-rust/actions/workflows/test.yml/badge.svg)](https://github.com/MatteoH2O1999/setup-rust/actions/workflows/test.yml)
+![GitHub License](https://img.shields.io/github/license/MatteoH2O1999/setup-rust)
+[![codecov](https://codecov.io/github/MatteoH2O1999/setup-rust/graph/badge.svg?token=gBtQmQor9O)](https://codecov.io/github/MatteoH2O1999/setup-rust)
+
 Setup Rust in your Github Actions Workflow
 
 ## Basic Usage
