@@ -16,10 +16,7 @@
 
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import * as io from '@actions/io';
 import {Profile} from '../inputs';
-import fs from 'fs';
-import path from 'path';
 import {toolname} from '../constants';
 
 export default abstract class Installer {
@@ -47,15 +44,6 @@ export default abstract class Installer {
   }
 
   async clearInstallation(): Promise<void> {
-    const rustupPath = await io.which(toolname, true);
-    const binPath = path.dirname(rustupPath);
-    for (const file of fs.readdirSync(binPath)) {
-      if (!file.includes(toolname)) {
-        await io.rmRF(path.join(binPath, file));
-      }
-    }
-    await exec.exec(toolname, ['update']);
-
     core.info('Collecting installed toolchains...');
     const versionsOutput = await exec.getExecOutput(
       toolname,
