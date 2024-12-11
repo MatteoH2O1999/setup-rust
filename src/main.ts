@@ -27,7 +27,7 @@ export default async function main(): Promise<void> {
 
   try {
     rustupPath = await io.which(toolname);
-  } catch (error) {
+  } catch {
     rustupPath = '';
   }
 
