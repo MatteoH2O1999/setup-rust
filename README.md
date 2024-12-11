@@ -12,7 +12,7 @@ Simple usage of this action:
 
 ```yml
 - name: Setup Rust
-  uses: MatteoH2O1999/setup-rust
+  uses: MatteoH2O1999/setup-rust@v1
 ```
 
 ## Inputs
