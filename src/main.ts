@@ -16,8 +16,8 @@
 
 import * as core from '@actions/core';
 import * as io from '@actions/io';
+import {Profile, parseInputs} from './inputs';
 import getInstaller from './installers';
-import {parseInputs} from './inputs';
 import {toolname} from './constants';
 
 export default async function main(): Promise<void> {
@@ -39,10 +39,6 @@ export default async function main(): Promise<void> {
   }
   core.endGroup();
 
-  core.startGroup('Clearing rustup installation');
-  await installer.clearInstallation();
-  core.endGroup();
-
   core.startGroup('Setting profile');
   await installer.setProfile(inputs.profile);
   core.endGroup();
@@ -52,11 +48,10 @@ export default async function main(): Promise<void> {
   core.endGroup();
 
   core.startGroup('Installing additional components');
-  if (inputs.components.length === 0) {
-    core.info('No additional components to install');
-  }
-  for (const component of inputs.components) {
-    await installer.installComponent(component);
+  if (inputs.profile === Profile.COMPLETE) {
+    await installer.ensureAllComponents();
+  } else {
+    await installer.ensureComponents(inputs.components);
   }
   core.endGroup();
 }

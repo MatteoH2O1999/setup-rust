@@ -54,16 +54,25 @@ async function parseComponents(): Promise<string[]> {
   const components: string[] = [];
   for (const line of lines) {
     for (const component of line.split(' ')) {
-      components.push(component.trim());
+      if (component.length !== 0) {
+        components.push(component.trim());
+      }
     }
   }
   return components;
 }
 
 export async function parseInputs(): Promise<ActionInputs> {
+  const profile = await parseProfile();
+  let components = await parseComponents();
+  components.push(...['rust-std', 'rustc', 'cargo']);
+  if (profile !== Profile.MINIMAL) {
+    components.push(...['rust-docs', 'rustfmt', 'clippy']);
+  }
+  components = [...new Set(components)];
   return {
     channel: await parseChannel(),
-    components: await parseComponents(),
-    profile: await parseProfile()
+    components,
+    profile
   };
 }
