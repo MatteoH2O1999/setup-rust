@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import {expect, test} from '@jest/globals';
+import {describe, expect, jest, test} from '@jest/globals';
+import main from '../main';
 
-test('Dummy test', () => {
-  expect(true).toBe(true);
+jest.mock('../main');
+const mockedMain = jest.mocked(main);
+
+describe('Index', () => {
+  test('should call main once', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('../index');
+    expect(mockedMain).toBeCalledTimes(1);
+  });
 });
