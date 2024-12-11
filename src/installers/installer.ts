@@ -23,12 +23,7 @@ export default abstract class Installer {
   abstract installRustup(): Promise<void>;
 
   async installChannel(channel: string): Promise<void> {
-    await exec.exec(toolname, [
-      'toolchain',
-      'install',
-      channel,
-      '--allow-downgrade'
-    ]);
+    await exec.exec(toolname, ['default', channel]);
     core.info(`Toolchain "${channel}" successfully installed.`);
   }
 
@@ -43,23 +38,19 @@ export default abstract class Installer {
     core.info(`Component "${component}" successfully installed`);
   }
 
-  async clearInstallation(): Promise<void> {
-    core.info('Collecting installed toolchains...');
-    const versionsOutput = await exec.getExecOutput(
-      toolname,
-      ['toolchain', 'list'],
-      {silent: true}
-    );
-    const versions = [];
-    for (const version of versionsOutput.stdout.split('\n')) {
-      if (version !== '') {
-        versions.push(version.split('(')[0].trim());
-      }
+  async ensureComponents(components: string[]): Promise<void> {
+    for (const component of components) {
+      await this.installComponent(component);
     }
+  }
 
-    for (const toolchain of versions) {
-      core.info(`Uninstalling toolchain ${toolchain}`);
-      await exec.exec(toolname, ['toolchain', 'remove', toolchain]);
+  async ensureAllComponents(): Promise<void> {
+    const output = await exec.getExecOutput(toolname, ['component', 'list']);
+    for (const c of output.stdout.split('\n')) {
+      if (!c.includes('installed')) {
+        const availableComponent = c.trim();
+        await this.installComponent(availableComponent);
+      }
     }
   }
 }
