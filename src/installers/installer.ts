@@ -32,25 +32,19 @@ export default abstract class Installer {
     core.info(`Profile "${profile}" is now new rustup profile.`);
   }
 
-  async installComponent(component: string): Promise<void> {
-    core.info(`Installing component ${component}`);
-    await exec.exec(toolname, ['component', 'add', component]);
-    core.info(`Component "${component}" successfully installed`);
-  }
-
   async ensureComponents(components: string[]): Promise<void> {
-    for (const component of components) {
-      await this.installComponent(component);
-    }
+    components = [...new Set(components)];
+    await exec.exec(toolname, ['component', 'add', ...components]);
   }
 
   async ensureAllComponents(): Promise<void> {
     const output = await exec.getExecOutput(toolname, ['component', 'list']);
+    const components: string[] = [];
     for (const c of output.stdout.split('\n')) {
       if (!c.includes('installed')) {
-        const availableComponent = c.trim();
-        await this.installComponent(availableComponent);
+        components.push(c.trim());
       }
     }
+    await this.ensureComponents(components);
   }
 }
