@@ -7,7 +7,7 @@
         "build": "tsc --build --verbose",
         "format": "prettier --write **/*.ts",
         "format-check": "prettier --check **/*.ts",
-        "lint": "eslint --ext .ts src/",
+        "lint": "eslint src/",
         "package": "ncc build ./lib/index.js --license licenses.txt && node ./.github/scripts/append_license",
         "test": "jest",
         "test-ci": "jest --reporters='@matteoh2o1999/github-actions-jest-reporter' --ci",
@@ -34,6 +34,7 @@
     },
     "devDependencies": {
         "@matteoh2o1999/github-actions-jest-reporter": "^3.0.0",
+        "@stylistic/eslint-plugin-ts": "^2.12.0",
         "@types/node": "^20.12.4",
         "@typescript-eslint/parser": "^7.5.0",
         "@vercel/ncc": "^0.38.1",
