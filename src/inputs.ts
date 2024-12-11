@@ -66,10 +66,13 @@ export async function parseInputs(): Promise<ActionInputs> {
   const profile = await parseProfile();
   let components = await parseComponents();
   components.push(...['rust-std', 'rustc', 'cargo']);
-  if (profile !== Profile.MINIMAL) {
+  if (profile === Profile.DEFAULT) {
     components.push(...['rust-docs', 'rustfmt', 'clippy']);
   }
   components = [...new Set(components)];
+  if (profile === Profile.COMPLETE) {
+    components = [];
+  }
   return {
     channel: await parseChannel(),
     components,
