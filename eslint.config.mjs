@@ -2,7 +2,7 @@ import jest from 'eslint-plugin-jest';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
-import stylisticTypescript from '@stylistic/eslint-plugin-ts';
+import stylisticTypescript from '@stylistic/eslint-plugin';
 import github from 'eslint-plugin-github';
 
 export default [
