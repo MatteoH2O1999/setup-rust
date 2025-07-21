@@ -35,7 +35,7 @@
     "devDependencies": {
         "@matteoh2o1999/github-actions-jest-reporter": "^3.0.0",
         "@stylistic/eslint-plugin": "^5.2.0",
-        "@types/node": "^24.0.14",
+        "@types/node": "^24.0.15",
         "@typescript-eslint/parser": "^8.37.0",
         "@vercel/ncc": "^0.38.3",
         "axios": "^1.10.0",
