@@ -55,7 +55,9 @@ export default async function main(): Promise<void> {
   }
   core.endGroup();
 
-  core.startGroup('Installing cargo subcommands');
-  await installer.ensureSubcommands(inputs.subcommands);
-  core.endGroup();
+  if (inputs.subcommands.length > 0) {
+    core.startGroup('Installing cargo subcommands');
+    await installer.ensureSubcommands(inputs.subcommands);
+    core.endGroup();
+  }
 }
