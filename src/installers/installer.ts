@@ -1,5 +1,5 @@
 // Action to install rustup in your github actions workflows
-// Copyright (C) 2024 Matteo Dell'Acqua
+// Copyright (C) 2025 Matteo Dell'Acqua
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -20,11 +20,14 @@ import {Profile} from '../inputs';
 import {toolname} from '../constants';
 
 export default abstract class Installer {
+  private channel: string | null = null;
+
   abstract installRustup(): Promise<void>;
 
   async installChannel(channel: string): Promise<void> {
     await exec.exec(toolname, ['default', channel]);
     core.info(`Toolchain "${channel}" successfully installed.`);
+    this.channel = channel;
   }
 
   async setProfile(profile: Profile): Promise<void> {
@@ -46,5 +49,20 @@ export default abstract class Installer {
       }
     }
     await this.ensureComponents(components);
+  }
+
+  async ensureSubcommands(subcommands: string[]): Promise<void> {
+    subcommands = [...new Set(subcommands)];
+    if (this.channel === null) {
+      core.error('No installed toolchain');
+      throw new Error('this.channel should not be null');
+    }
+    await exec.exec(toolname, [
+      'run',
+      this.channel,
+      'cargo',
+      'install',
+      ...subcommands
+    ]);
   }
 }

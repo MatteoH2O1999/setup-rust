@@ -1,5 +1,5 @@
 // Action to install rustup in your github actions workflows
-// Copyright (C) 2024 Matteo Dell'Acqua
+// Copyright (C) 2025 Matteo Dell'Acqua
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -44,18 +44,24 @@ class MockInstaller extends installer.Installer {
   override async ensureComponents(components: string[]): Promise<void> {
     commands.push(`Install components ${components.join(' ')}`);
   }
+
+  override async ensureSubcommands(subcommands: string[]): Promise<void> {
+    commands.push(`Install cargo subcommands ${subcommands.join(' ')}`);
+  }
 }
 
 type MockedInputs = {
   channel: string;
   profile: string;
   components: string;
+  subcommands: string;
 };
 
 const mockedInputs: MockedInputs = {
   channel: 'stable',
   components: 'clippy',
-  profile: 'minimal'
+  profile: 'minimal',
+  subcommands: 'a b c-d'
 };
 
 function mockInput(
@@ -70,6 +76,8 @@ function mockInput(
     return inpts.components;
   } else if (input === InputNames.PROFILE) {
     return inpts.profile;
+  } else if (input == InputNames.SUBCOMMANDS) {
+    return inpts.subcommands;
   } else {
     return '';
   }
@@ -133,7 +141,8 @@ describe('main', () => {
     expect(commands).toEqual([
       'Set profile to minimal',
       'Install toolchain from channel stable',
-      'Install components clippy rust-std rustc cargo'
+      'Install components clippy rust-std rustc cargo',
+      'Install cargo subcommands a b c-d'
     ]);
   });
 
@@ -146,7 +155,8 @@ describe('main', () => {
       'Install rustup',
       'Set profile to minimal',
       'Install toolchain from channel stable',
-      'Install components clippy rust-std rustc cargo'
+      'Install components clippy rust-std rustc cargo',
+      'Install cargo subcommands a b c-d'
     ]);
   });
 
@@ -159,7 +169,8 @@ describe('main', () => {
     expect(commands).toEqual([
       'Set profile to complete',
       'Install toolchain from channel stable',
-      'Install all components'
+      'Install all components',
+      'Install cargo subcommands a b c-d'
     ]);
   });
 });

@@ -1,5 +1,5 @@
 // Action to install rustup in your github actions workflows
-// Copyright (C) 2024 Matteo Dell'Acqua
+// Copyright (C) 2025 Matteo Dell'Acqua
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -23,12 +23,14 @@ type MockedInputs = {
   channel: string;
   profile: string;
   components: string;
+  subcommands: string;
 };
 
 const mockedInputs: MockedInputs = {
   channel: 'stable',
   components: '',
-  profile: 'minimal'
+  profile: 'minimal',
+  subcommands: ''
 };
 
 function mockInput(
@@ -43,6 +45,8 @@ function mockInput(
     return inpts.components;
   } else if (input === InputNames.PROFILE) {
     return inpts.profile;
+  } else if (input === InputNames.SUBCOMMANDS) {
+    return inpts.subcommands;
   } else {
     return '';
   }
@@ -97,9 +101,10 @@ describe('Input parsing', () => {
 
     expect(actual.channel).toBe('stable');
     expect(actual.profile).toBe(inputs.Profile.MINIMAL);
-    expect(new Set(actual.components)).toStrictEqual(
-      new Set(['cargo', 'rustc', 'rust-std'])
+    expect(actual.components.sort()).toStrictEqual(
+      ['cargo', 'rustc', 'rust-std'].sort()
     );
+    expect(actual.subcommands.sort()).toStrictEqual([]);
   });
 
   describe(`"${InputNames.CHANNEL}"`, () => {
@@ -110,9 +115,10 @@ describe('Input parsing', () => {
 
       expect(actual.channel).toBe('nightly');
       expect(actual.profile).toBe(inputs.Profile.MINIMAL);
-      expect(new Set(actual.components)).toStrictEqual(
-        new Set(['cargo', 'rustc', 'rust-std'])
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std'].sort()
       );
+      expect(actual.subcommands.sort()).toStrictEqual([]);
     });
 
     test('1.84', async () => {
@@ -122,9 +128,10 @@ describe('Input parsing', () => {
 
       expect(actual.channel).toBe('1.84');
       expect(actual.profile).toBe(inputs.Profile.MINIMAL);
-      expect(new Set(actual.components)).toStrictEqual(
-        new Set(['cargo', 'rustc', 'rust-std'])
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std'].sort()
       );
+      expect(actual.subcommands.sort()).toStrictEqual([]);
     });
 
     test('random', async () => {
@@ -134,9 +141,10 @@ describe('Input parsing', () => {
 
       expect(actual.channel).toBe('random');
       expect(actual.profile).toBe(inputs.Profile.MINIMAL);
-      expect(new Set(actual.components)).toStrictEqual(
-        new Set(['cargo', 'rustc', 'rust-std'])
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std'].sort()
       );
+      expect(actual.subcommands.sort()).toStrictEqual([]);
     });
   });
 
@@ -148,16 +156,10 @@ describe('Input parsing', () => {
 
       expect(actual.channel).toBe('stable');
       expect(actual.profile).toBe(inputs.Profile.DEFAULT);
-      expect(new Set(actual.components)).toStrictEqual(
-        new Set([
-          'cargo',
-          'rustc',
-          'rust-std',
-          'rust-docs',
-          'clippy',
-          'rustfmt'
-        ])
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std', 'rust-docs', 'clippy', 'rustfmt'].sort()
       );
+      expect(actual.subcommands.sort()).toStrictEqual([]);
     });
 
     test('complete', async () => {
@@ -167,7 +169,8 @@ describe('Input parsing', () => {
 
       expect(actual.channel).toBe('stable');
       expect(actual.profile).toBe(inputs.Profile.COMPLETE);
-      expect(actual.components).toStrictEqual([]);
+      expect(actual.components.sort()).toStrictEqual([]);
+      expect(actual.subcommands.sort()).toStrictEqual([]);
     });
 
     test('other', async () => {
@@ -185,9 +188,10 @@ describe('Input parsing', () => {
 
       expect(actual.channel).toBe('stable');
       expect(actual.profile).toBe(inputs.Profile.MINIMAL);
-      expect(new Set(actual.components)).toStrictEqual(
-        new Set(['a', 'b', 'rustc', 'cargo', 'rust-std'])
+      expect(actual.components.sort()).toStrictEqual(
+        ['a', 'b', 'rustc', 'cargo', 'rust-std'].sort()
       );
+      expect(actual.subcommands.sort()).toStrictEqual([]);
     });
 
     test('Duplicate', async () => {
@@ -197,9 +201,38 @@ describe('Input parsing', () => {
 
       expect(actual.channel).toBe('stable');
       expect(actual.profile).toBe(inputs.Profile.MINIMAL);
-      expect(new Set(actual.components)).toStrictEqual(
-        new Set(['cargo', 'rustc', 'rust-std'])
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std'].sort()
       );
+      expect(actual.subcommands.sort()).toStrictEqual([]);
+    });
+  });
+
+  describe(`"${InputNames.SUBCOMMANDS}"`, () => {
+    test('Unique', async () => {
+      mockedInputs.subcommands = 'a b';
+
+      const actual = await inputs.parseInputs();
+
+      expect(actual.channel).toBe('stable');
+      expect(actual.profile).toBe(inputs.Profile.MINIMAL);
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std'].sort()
+      );
+      expect(actual.subcommands.sort()).toStrictEqual(['a', 'b'].sort());
+    });
+
+    test('Duplicate', async () => {
+      mockedInputs.subcommands = 'b a a b';
+
+      const actual = await inputs.parseInputs();
+
+      expect(actual.channel).toBe('stable');
+      expect(actual.profile).toBe(inputs.Profile.MINIMAL);
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std'].sort()
+      );
+      expect(actual.subcommands.sort()).toStrictEqual(['b', 'a'].sort());
     });
   });
 });
