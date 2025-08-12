@@ -12,13 +12,14 @@ Simple usage of this action:
 
 ```yml
 - name: Setup Rust
-  uses: MatteoH2O1999/setup-rust@v1
+  uses: MatteoH2O1999/setup-rust@v2
 ```
 
 ## Inputs
 
 |Input|Description|Default|
 |-----|-----------|-------|
-|Channel|The rust channel to download rust from|`stable`|
-|Profile|The profile to use (either `minimal`, `default` or `complete`)|`minimal`|
-|Components|The list of additional components to install (`clippy`, `rustfmt`, etc.)|`None`|
+|`channel`|The rust channel to download rust from|`stable`|
+|`profile`|The profile to use (either `minimal`, `default` or `complete`)|`minimal`|
+|`components`|The list of additional components to install (`clippy`, `rustfmt`, etc.)|`None`|
+|`subcommands`|The list of cargo subcommands to install|`None`|
