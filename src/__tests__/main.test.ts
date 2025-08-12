@@ -42,11 +42,11 @@ class MockInstaller extends installer.Installer {
   }
 
   override async ensureComponents(components: string[]): Promise<void> {
-    commands.push(`Install components ${components.join(' ')}`);
+    commands.push(`Install components ${components.join(', ')}`);
   }
 
   override async ensureSubcommands(subcommands: string[]): Promise<void> {
-    commands.push(`Install cargo subcommands ${subcommands.join(' ')}`);
+    commands.push(`Install cargo subcommands ${subcommands.join(', ')}`);
   }
 }
 
@@ -61,7 +61,7 @@ const mockedInputs: MockedInputs = {
   channel: 'stable',
   components: 'clippy',
   profile: 'minimal',
-  subcommands: 'a b c-d'
+  subcommands: ''
 };
 
 function mockInput(
@@ -131,6 +131,11 @@ mockedInstaller.default.mockImplementation(async () => {
 describe('main', () => {
   beforeEach(() => {
     commands = [];
+
+    mockedInputs.channel = 'stable';
+    mockedInputs.components = 'clippy';
+    mockedInputs.profile = 'minimal';
+    mockedInputs.subcommands = '';
   });
 
   test('rustup already installed', async () => {
@@ -141,8 +146,7 @@ describe('main', () => {
     expect(commands).toEqual([
       'Set profile to minimal',
       'Install toolchain from channel stable',
-      'Install components clippy rust-std rustc cargo',
-      'Install cargo subcommands a b c-d'
+      'Install components clippy, rust-std, rustc, cargo'
     ]);
   });
 
@@ -155,8 +159,7 @@ describe('main', () => {
       'Install rustup',
       'Set profile to minimal',
       'Install toolchain from channel stable',
-      'Install components clippy rust-std rustc cargo',
-      'Install cargo subcommands a b c-d'
+      'Install components clippy, rust-std, rustc, cargo'
     ]);
   });
 
@@ -169,8 +172,21 @@ describe('main', () => {
     expect(commands).toEqual([
       'Set profile to complete',
       'Install toolchain from channel stable',
-      'Install all components',
-      'Install cargo subcommands a b c-d'
+      'Install all components'
+    ]);
+  });
+
+  test('cargo subcommands', async () => {
+    mockedIo.which.mockResolvedValueOnce('rustup');
+    mockedInputs.subcommands = 'a b c-d';
+
+    await main();
+
+    expect(commands).toEqual([
+      'Set profile to minimal',
+      'Install toolchain from channel stable',
+      'Install components clippy, rust-std, rustc, cargo',
+      'Install cargo subcommands a, b, c-d'
     ]);
   });
 });

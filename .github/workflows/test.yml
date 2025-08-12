@@ -123,6 +123,7 @@ jobs:
           channel: stable
           profile: default
           components: clippy rustfmt
+          subcommands: cargo-update
       - name: Check rustup version
         run: rustup -V
       - name: Check cargo version
