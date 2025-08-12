@@ -14,6 +14,9 @@ inputs:
   components:
     description: The components to install
     required: false
+  subcommands:
+    description: The cargo subcommands to install
+    required: false
 runs:
   using: node20
   main: dist/index.js

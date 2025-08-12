@@ -1,5 +1,5 @@
 // Action to install rustup in your github actions workflows
-// Copyright (C) 2024 Matteo Dell'Acqua
+// Copyright (C) 2025 Matteo Dell'Acqua
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -27,6 +27,7 @@ export type ActionInputs = {
   channel: string;
   profile: Profile;
   components: string[];
+  subcommands: string[];
 };
 
 async function parseChannel(): Promise<string> {
@@ -62,6 +63,19 @@ async function parseComponents(): Promise<string[]> {
   return components;
 }
 
+async function parseSubcommands(): Promise<string[]> {
+  const lines = core.getMultilineInput(InputNames.SUBCOMMANDS);
+  const subcommands: string[] = [];
+  for (const line of lines) {
+    for (const subcommand of line.split(' ')) {
+      if (subcommand.length != 0) {
+        subcommands.push(subcommand.trim());
+      }
+    }
+  }
+  return subcommands;
+}
+
 export async function parseInputs(): Promise<ActionInputs> {
   const profile = await parseProfile();
   let components = await parseComponents();
@@ -76,6 +90,7 @@ export async function parseInputs(): Promise<ActionInputs> {
   return {
     channel: await parseChannel(),
     components,
-    profile
+    profile,
+    subcommands: [...new Set(await parseSubcommands())]
   };
 }

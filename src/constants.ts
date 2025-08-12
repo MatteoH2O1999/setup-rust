@@ -1,5 +1,5 @@
 // Action to install rustup in your github actions workflows
-// Copyright (C) 2024 Matteo Dell'Acqua
+// Copyright (C) 2025 Matteo Dell'Acqua
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -17,7 +17,8 @@
 export enum InputNames {
   CHANNEL = 'channel',
   PROFILE = 'profile',
-  COMPONENTS = 'components'
+  COMPONENTS = 'components',
+  SUBCOMMANDS = 'subcommands'
 }
 
 const toolname = 'rustup';
