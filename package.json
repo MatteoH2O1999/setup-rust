@@ -33,7 +33,7 @@
         "semver": "^7.7.2"
     },
     "devDependencies": {
-        "@matteoh2o1999/github-actions-jest-reporter": "^3.0.0",
+        "@matteoh2o1999/github-actions-jest-reporter": "^4.0.0",
         "@stylistic/eslint-plugin": "^5.2.3",
         "@types/node": "^24.3.0",
         "@typescript-eslint/parser": "^8.40.0",
