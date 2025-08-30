@@ -56,8 +56,18 @@ export default async function main(): Promise<void> {
   core.endGroup();
 
   if (inputs.subcommands.length > 0) {
-    core.startGroup('Installing cargo subcommands');
-    await installer.ensureSubcommands(inputs.subcommands);
+    core.startGroup('Installing cargo binstall');
+    await installer.installBinstall();
     core.endGroup();
+    core.startGroup('Installing cargo subcommands');
+    await installer.ensureSubcommands(
+      inputs.subcommands.filter(subcommand => subcommand !== 'cargo-binstall')
+    );
+    core.endGroup();
+    if (!inputs.subcommands.includes('cargo-binstall')) {
+      core.startGroup('Uninstalling cargo binstall');
+      await installer.uninstallBinstall();
+      core.endGroup();
+    }
   }
 }

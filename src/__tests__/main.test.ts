@@ -29,6 +29,14 @@ class MockInstaller extends installer.Installer {
     commands.push('Install rustup');
   }
 
+  override async installBinstall(): Promise<void> {
+    commands.push('Install cargo-binstall');
+  }
+
+  override async uninstallBinstall(): Promise<void> {
+    commands.push('Uninstall cargo-binstall');
+  }
+
   override async setProfile(profile: Profile): Promise<void> {
     commands.push(`Set profile to ${profile}`);
   }
@@ -186,6 +194,23 @@ describe('main', () => {
       'Set profile to minimal',
       'Install toolchain from channel stable',
       'Install components clippy, rust-std, rustc, cargo',
+      'Install cargo-binstall',
+      'Install cargo subcommands a, b, c-d',
+      'Uninstall cargo-binstall'
+    ]);
+  });
+
+  test('cargo subcommands with cargo-binstall', async () => {
+    mockedIo.which.mockResolvedValueOnce('rustup');
+    mockedInputs.subcommands = 'a b c-d cargo-binstall';
+
+    await main();
+
+    expect(commands).toEqual([
+      'Set profile to minimal',
+      'Install toolchain from channel stable',
+      'Install components clippy, rust-std, rustc, cargo',
+      'Install cargo-binstall',
       'Install cargo subcommands a, b, c-d'
     ]);
   });
