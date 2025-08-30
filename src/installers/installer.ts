@@ -51,6 +51,50 @@ export default abstract class Installer {
     await this.ensureComponents(components);
   }
 
+  async installBinstall(): Promise<void> {
+    if (this.channel === null) {
+      core.error('No installed toolchain');
+      throw new Error('this.channel should not be null');
+    }
+
+    await exec.exec(toolname, [
+      'run',
+      this.channel,
+      'cargo',
+      'install',
+      'cargo-quickinstall'
+    ]);
+    await exec.exec(toolname, [
+      'run',
+      this.channel,
+      'cargo',
+      'quickinstall',
+      'cargo-binstall'
+    ]);
+    await exec.exec(toolname, [
+      'run',
+      this.channel,
+      'cargo',
+      'uninstall',
+      'cargo-quickinstall'
+    ]);
+  }
+
+  async uninstallBinstall(): Promise<void> {
+    if (this.channel === null) {
+      core.error('No installed toolchain');
+      throw new Error('this.channel should not be null');
+    }
+
+    await exec.exec(toolname, [
+      'run',
+      this.channel,
+      'cargo',
+      'uninstall',
+      'cargo-binstall'
+    ]);
+  }
+
   async ensureSubcommands(subcommands: string[]): Promise<void> {
     subcommands = [...new Set(subcommands)];
     if (this.channel === null) {
@@ -61,7 +105,9 @@ export default abstract class Installer {
       'run',
       this.channel,
       'cargo',
-      'install',
+      'binstall',
+      '--no-confirm',
+      '--disable-telemetry',
       ...subcommands
     ]);
   }

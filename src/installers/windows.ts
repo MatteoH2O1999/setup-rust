@@ -21,7 +21,7 @@ import Installer from './installer';
 import {windowsInstallerUrl} from '../constants';
 
 export default class WindowsInstaller extends Installer {
-  async installRustup(): Promise<void> {
+  override async installRustup(): Promise<void> {
     const installerFile = await tc.downloadTool(windowsInstallerUrl);
     core.info('Installer downloaded');
     await exec.exec(installerFile, ['-y']);
