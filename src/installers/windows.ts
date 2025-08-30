@@ -27,4 +27,8 @@ export default class WindowsInstaller extends Installer {
     await exec.exec(installerFile, ['-y']);
     core.info('Rustup successfully installed.');
   }
+
+  override osLabel(): string {
+    return 'windows';
+  }
 }

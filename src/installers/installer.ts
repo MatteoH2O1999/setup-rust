@@ -33,6 +33,7 @@ export default abstract class Installer {
   private restoredKey: string | null = null;
   private readonly requestedPackagesKey;
   private readonly saveBinCache: boolean;
+  private baseCache = `${BIN_BASE_CACHE_KEY}-${this.osLabel()}`;
 
   constructor(actionInputs: ActionInputs) {
     this.actionInputs = actionInputs;
@@ -46,6 +47,7 @@ export default abstract class Installer {
   }
 
   abstract installRustup(): Promise<void>;
+  abstract osLabel(): string;
 
   async installChannel(): Promise<void> {
     await exec.exec(toolname, ['default', this.actionInputs.channel]);
@@ -104,7 +106,7 @@ export default abstract class Installer {
       .update(packageInformation)
       .digest('base64');
 
-    const expectedKey = `${BIN_BASE_CACHE_KEY}-${this.requestedPackagesKey}-${packageInformationKey}`;
+    const expectedKey = `${this.baseCache}-${this.requestedPackagesKey}-${packageInformationKey}`;
     core.debug(`Expected key: ${expectedKey}`);
     core.debug(`Restored key: ${this.restoredKey ?? 'null'}`);
 
@@ -121,8 +123,8 @@ export default abstract class Installer {
     this.restoredKey =
       (await cache.restoreCache(
         BIN_CACHE_PATHS,
-        `${BIN_BASE_CACHE_KEY}-${this.requestedPackagesKey}`,
-        [BIN_BASE_CACHE_KEY]
+        `${this.baseCache}-${this.requestedPackagesKey}`,
+        [this.baseCache]
       )) ?? null;
 
     if (this.restoredKey === null) {

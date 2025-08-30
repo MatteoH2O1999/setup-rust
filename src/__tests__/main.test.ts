@@ -59,6 +59,10 @@ class MockInstaller extends installer.Installer {
       commands.push(`Install components ${this.inputs.components.join(', ')}`);
     }
   }
+
+  override osLabel(): string {
+    return 'generic';
+  }
 }
 
 type MockedInputs = {
