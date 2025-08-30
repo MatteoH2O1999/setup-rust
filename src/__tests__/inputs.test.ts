@@ -24,9 +24,11 @@ type MockedInputs = {
   profile: string;
   components: string;
   subcommands: string;
+  cache: string;
 };
 
 const mockedInputs: MockedInputs = {
+  cache: 'false',
   channel: 'stable',
   components: '',
   profile: 'minimal',
@@ -47,6 +49,8 @@ function mockInput(
     return inpts.profile;
   } else if (input === InputNames.SUBCOMMANDS) {
     return inpts.subcommands;
+  } else if (input == InputNames.CACHE) {
+    return inpts.cache;
   } else {
     return '';
   }
@@ -94,6 +98,8 @@ describe('Input parsing', () => {
     mockedInputs.channel = 'stable';
     mockedInputs.profile = 'minimal';
     mockedInputs.components = '';
+    mockedInputs.subcommands = '';
+    mockedInputs.cache = 'false';
   });
 
   test('default', async () => {
@@ -105,6 +111,7 @@ describe('Input parsing', () => {
       ['cargo', 'rustc', 'rust-std'].sort()
     );
     expect(actual.subcommands.sort()).toStrictEqual([]);
+    expect(actual.cache).toBe(inputs.Cache.NOTHING);
   });
 
   describe(`"${InputNames.CHANNEL}"`, () => {
@@ -119,6 +126,7 @@ describe('Input parsing', () => {
         ['cargo', 'rustc', 'rust-std'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
 
     test('1.84', async () => {
@@ -132,6 +140,7 @@ describe('Input parsing', () => {
         ['cargo', 'rustc', 'rust-std'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
 
     test('random', async () => {
@@ -145,6 +154,7 @@ describe('Input parsing', () => {
         ['cargo', 'rustc', 'rust-std'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
   });
 
@@ -160,6 +170,7 @@ describe('Input parsing', () => {
         ['cargo', 'rustc', 'rust-std', 'rust-docs', 'clippy', 'rustfmt'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
 
     test('complete', async () => {
@@ -171,6 +182,7 @@ describe('Input parsing', () => {
       expect(actual.profile).toBe(inputs.Profile.COMPLETE);
       expect(actual.components.sort()).toStrictEqual([]);
       expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
 
     test('other', async () => {
@@ -192,6 +204,7 @@ describe('Input parsing', () => {
         ['a', 'b', 'rustc', 'cargo', 'rust-std'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
 
     test('Duplicate', async () => {
@@ -205,6 +218,7 @@ describe('Input parsing', () => {
         ['cargo', 'rustc', 'rust-std'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
   });
 
@@ -220,6 +234,7 @@ describe('Input parsing', () => {
         ['cargo', 'rustc', 'rust-std'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual(['a', 'b'].sort());
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
     });
 
     test('Duplicate', async () => {
@@ -233,6 +248,29 @@ describe('Input parsing', () => {
         ['cargo', 'rustc', 'rust-std'].sort()
       );
       expect(actual.subcommands.sort()).toStrictEqual(['b', 'a'].sort());
+      expect(actual.cache).toBe(inputs.Cache.NOTHING);
+    });
+  });
+
+  describe(`"${InputNames.CACHE}"`, () => {
+    test('default', async () => {
+      mockedInputs.cache = 'all';
+
+      const actual = await inputs.parseInputs();
+
+      expect(actual.channel).toBe('stable');
+      expect(actual.profile).toBe(inputs.Profile.MINIMAL);
+      expect(actual.components.sort()).toStrictEqual(
+        ['cargo', 'rustc', 'rust-std'].sort()
+      );
+      expect(actual.subcommands.sort()).toStrictEqual([]);
+      expect(actual.cache).toBe(inputs.Cache.ALL);
+    });
+
+    test('other', async () => {
+      mockedInputs.cache = 'other';
+
+      await expect(inputs.parseInputs()).rejects.toThrow();
     });
   });
 });
