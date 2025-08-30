@@ -27,4 +27,8 @@ export default class LinuxInstaller extends Installer {
     await exec.exec(installerFile);
     core.info('Rustup successfully installed');
   }
+
+  override osLabel(): string {
+    return 'linux';
+  }
 }
