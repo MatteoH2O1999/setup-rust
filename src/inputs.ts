@@ -23,11 +23,18 @@ export enum Profile {
   COMPLETE = 'complete'
 }
 
+export enum Cache {
+  NOTHING,
+  BINSTALL,
+  ALL
+}
+
 export type ActionInputs = {
   channel: string;
   profile: Profile;
   components: string[];
   subcommands: string[];
+  cache: Cache;
 };
 
 async function parseChannel(): Promise<string> {
@@ -76,6 +83,22 @@ async function parseSubcommands(): Promise<string[]> {
   return subcommands;
 }
 
+async function parseCache(): Promise<Cache> {
+  const cacheStrig = core.getInput(InputNames.CACHE).toLowerCase().trim();
+  if (cacheStrig === 'false') {
+    return Cache.NOTHING;
+  }
+  if (cacheStrig === 'binstall') {
+    return Cache.BINSTALL;
+  }
+  if (cacheStrig === 'all') {
+    return Cache.ALL;
+  }
+  throw new Error(
+    `Invalid cache: ${cacheStrig}. Expected one of "false", "binstall" or "all".`
+  );
+}
+
 export async function parseInputs(): Promise<ActionInputs> {
   const profile = await parseProfile();
   let components = await parseComponents();
@@ -88,6 +111,7 @@ export async function parseInputs(): Promise<ActionInputs> {
     components = [];
   }
   return {
+    cache: await parseCache(),
     channel: await parseChannel(),
     components,
     profile,
