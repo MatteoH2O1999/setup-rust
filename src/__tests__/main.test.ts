@@ -17,44 +17,47 @@
 import * as core from '@actions/core';
 import * as installer from '../installers/index';
 import * as io from '@actions/io';
+import {ActionInputs, Profile} from '../inputs';
 import {beforeEach, describe, expect, jest, test} from '@jest/globals';
 import {InputNames} from '../constants';
-import {Profile} from '../inputs';
 import main from '../main';
 
 let commands: string[] = [];
 
 class MockInstaller extends installer.Installer {
+  private readonly inputs: ActionInputs;
+
+  constructor(inputs: ActionInputs) {
+    super(inputs);
+    this.inputs = inputs;
+  }
+
   override async installRustup(): Promise<void> {
     commands.push('Install rustup');
   }
 
-  override async installBinstall(): Promise<void> {
-    commands.push('Install cargo-binstall');
+  override async setProfile(): Promise<void> {
+    commands.push(`Set profile to ${this.inputs.profile}`);
   }
 
-  override async uninstallBinstall(): Promise<void> {
-    commands.push('Uninstall cargo-binstall');
+  override async installChannel(): Promise<void> {
+    commands.push(`Install toolchain from channel ${this.inputs.channel}`);
   }
 
-  override async setProfile(profile: Profile): Promise<void> {
-    commands.push(`Set profile to ${profile}`);
+  override async installSubcommands(): Promise<void> {
+    if (this.inputs.subcommands.length > 0) {
+      commands.push(
+        `Install cargo subcommands ${this.inputs.subcommands.join(', ')}`
+      );
+    }
   }
 
-  override async installChannel(channel: string): Promise<void> {
-    commands.push(`Install toolchain from channel ${channel}`);
-  }
-
-  override async ensureAllComponents(): Promise<void> {
-    commands.push('Install all components');
-  }
-
-  override async ensureComponents(components: string[]): Promise<void> {
-    commands.push(`Install components ${components.join(', ')}`);
-  }
-
-  override async ensureSubcommands(subcommands: string[]): Promise<void> {
-    commands.push(`Install cargo subcommands ${subcommands.join(', ')}`);
+  override async installComponents(): Promise<void> {
+    if (this.inputs.profile === Profile.COMPLETE) {
+      commands.push('Install all components');
+    } else {
+      commands.push(`Install components ${this.inputs.components.join(', ')}`);
+    }
   }
 }
 
@@ -63,9 +66,11 @@ type MockedInputs = {
   profile: string;
   components: string;
   subcommands: string;
+  cache: string;
 };
 
 const mockedInputs: MockedInputs = {
+  cache: 'false',
   channel: 'stable',
   components: 'clippy',
   profile: 'minimal',
@@ -86,6 +91,8 @@ function mockInput(
     return inpts.profile;
   } else if (input == InputNames.SUBCOMMANDS) {
     return inpts.subcommands;
+  } else if (input == InputNames.CACHE) {
+    return inpts.cache;
   } else {
     return '';
   }
@@ -132,8 +139,8 @@ mockedCore.getMultilineInput.mockImplementation(
   }
 );
 
-mockedInstaller.default.mockImplementation(async () => {
-  return new MockInstaller();
+mockedInstaller.default.mockImplementation(async actionInputs => {
+  return new MockInstaller(actionInputs);
 });
 
 describe('main', () => {
@@ -144,6 +151,7 @@ describe('main', () => {
     mockedInputs.components = 'clippy';
     mockedInputs.profile = 'minimal';
     mockedInputs.subcommands = '';
+    mockedInputs.cache = 'false';
   });
 
   test('rustup already installed', async () => {
@@ -194,23 +202,6 @@ describe('main', () => {
       'Set profile to minimal',
       'Install toolchain from channel stable',
       'Install components clippy, rust-std, rustc, cargo',
-      'Install cargo-binstall',
-      'Install cargo subcommands a, b, c-d',
-      'Uninstall cargo-binstall'
-    ]);
-  });
-
-  test('cargo subcommands with cargo-binstall', async () => {
-    mockedIo.which.mockResolvedValueOnce('rustup');
-    mockedInputs.subcommands = 'a b c-d cargo-binstall';
-
-    await main();
-
-    expect(commands).toEqual([
-      'Set profile to minimal',
-      'Install toolchain from channel stable',
-      'Install components clippy, rust-std, rustc, cargo',
-      'Install cargo-binstall',
       'Install cargo subcommands a, b, c-d'
     ]);
   });

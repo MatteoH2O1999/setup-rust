@@ -22,7 +22,7 @@ import {toolname} from './constants';
 
 export default async function main(): Promise<void> {
   const inputs = await parseInputs();
-  const installer = await getInstaller(inputs.cache);
+  const installer = await getInstaller(inputs);
   let rustupPath: string;
 
   try {
