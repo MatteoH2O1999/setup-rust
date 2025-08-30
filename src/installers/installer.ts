@@ -92,15 +92,19 @@ export default abstract class Installer {
     core.info('Checking whether subcommands cache should be saved');
 
     const packageInformation = (
-      await exec.getExecOutput(toolname, [
-        'run',
-        this.actionInputs.channel,
-        'cargo',
-        'install',
-        '--list',
-        '--root',
-        ROOT_INSTALL_PATH
-      ])
+      await exec.getExecOutput(
+        toolname,
+        [
+          'run',
+          this.actionInputs.channel,
+          'cargo',
+          'install',
+          '--list',
+          '--root',
+          ROOT_INSTALL_PATH
+        ],
+        {silent: true}
+      )
     ).stdout;
     core.info(`Computing key for packages:\n${packageInformation}`);
 
