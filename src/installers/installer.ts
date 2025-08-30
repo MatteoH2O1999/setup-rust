@@ -43,6 +43,7 @@ export default abstract class Installer {
       .createHash('sha256')
       .update(requestedPackages)
       .digest('base64');
+    core.debug(`Requested packages key: ${this.requestedPackagesKey}`);
     this.saveBinCache = this.actionInputs.cache !== Cache.NOTHING;
   }
 
@@ -96,7 +97,9 @@ export default abstract class Installer {
         this.actionInputs.channel,
         'cargo',
         'install',
-        '--list'
+        '--list',
+        '--root',
+        SUBCOMMANDS_PATH
       ])
     ).stdout;
     core.info(`Computing key for packages:\n${packageInformation}`);
@@ -156,6 +159,9 @@ export default abstract class Installer {
       this.actionInputs.channel,
       'cargo',
       'uninstall',
+      ...(this.actionInputs.cache === Cache.NOTHING
+        ? []
+        : ['--root', ROOT_INSTALL_PATH]),
       'cargo-binstall'
     ]);
   }
