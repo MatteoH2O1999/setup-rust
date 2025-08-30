@@ -14,20 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import {Cache} from '../inputs';
 import DarwinInstaller from './darwin';
 import Installer from './installer';
 import LinuxInstaller from './linux';
 import WindowsInstaller from './windows';
 
-export default async function getInstaller(): Promise<Installer> {
+export default async function getInstaller(cache: Cache): Promise<Installer> {
   switch (process.platform) {
     case 'win32':
     case 'cygwin':
-      return new WindowsInstaller();
+      return new WindowsInstaller(cache);
     case 'darwin':
-      return new DarwinInstaller();
+      return new DarwinInstaller(cache);
     case 'linux':
-      return new LinuxInstaller();
+      return new LinuxInstaller(cache);
     default:
       throw Error(`Invalid platform: ${process.platform}.`);
   }

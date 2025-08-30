@@ -1,5 +1,5 @@
 // Action to install rustup in your github actions workflows
-// Copyright (C) 2024 Matteo Dell'Acqua
+// Copyright (C) 2025 Matteo Dell'Acqua
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -16,13 +16,13 @@
 
 import * as core from '@actions/core';
 import * as io from '@actions/io';
-import {Profile, parseInputs} from './inputs';
 import getInstaller from './installers';
+import {parseInputs} from './inputs';
 import {toolname} from './constants';
 
 export default async function main(): Promise<void> {
   const inputs = await parseInputs();
-  const installer = await getInstaller();
+  const installer = await getInstaller(inputs.cache);
   let rustupPath: string;
 
   try {
@@ -40,34 +40,18 @@ export default async function main(): Promise<void> {
   core.endGroup();
 
   core.startGroup('Setting profile');
-  await installer.setProfile(inputs.profile);
+  await installer.setProfile();
   core.endGroup();
 
   core.startGroup('Installing toolchain');
-  await installer.installChannel(inputs.channel);
+  await installer.installChannel();
   core.endGroup();
 
   core.startGroup('Installing additional components');
-  if (inputs.profile === Profile.COMPLETE) {
-    await installer.ensureAllComponents();
-  } else {
-    await installer.ensureComponents(inputs.components);
-  }
+  await installer.installComponents();
   core.endGroup();
 
-  if (inputs.subcommands.length > 0) {
-    core.startGroup('Installing cargo binstall');
-    await installer.installBinstall();
-    core.endGroup();
-    core.startGroup('Installing cargo subcommands');
-    await installer.ensureSubcommands(
-      inputs.subcommands.filter(subcommand => subcommand !== 'cargo-binstall')
-    );
-    core.endGroup();
-    if (!inputs.subcommands.includes('cargo-binstall')) {
-      core.startGroup('Uninstalling cargo binstall');
-      await installer.uninstallBinstall();
-      core.endGroup();
-    }
-  }
+  core.startGroup('Installing cargo subcommands');
+  await installer.installSubcommands();
+  core.endGroup();
 }

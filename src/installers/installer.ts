@@ -14,33 +14,66 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import * as cache from '@actions/cache';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import {Profile} from '../inputs';
+import {ActionInputs, Cache, Profile} from '../inputs';
+import crypto from 'crypto';
+import os from 'os';
+import path from 'path';
 import {toolname} from '../constants';
 
+const ROOT_INSTALL_PATH = path.join(os.homedir(), 'setup-rust', '.cargo');
+const SUBCOMMANDS_PATH = path.join(ROOT_INSTALL_PATH, 'bin');
+const BIN_BASE_CACHE_KEY = 'setup-rust-bin';
+const BIN_CACHE_PATHS = [SUBCOMMANDS_PATH];
+
 export default abstract class Installer {
-  private channel: string | null = null;
+  private readonly actionInputs;
+  private restoredKey: string | null = null;
+  private readonly requestedPackagesKey;
+  private readonly saveBinCache: boolean;
+
+  constructor(actionInputs: ActionInputs) {
+    this.actionInputs = actionInputs;
+
+    const requestedPackages = this.actionInputs.subcommands.sort().join(', ');
+    this.requestedPackagesKey = crypto
+      .createHash('sha256')
+      .update(requestedPackages)
+      .digest('base64');
+    this.saveBinCache = this.actionInputs.cache !== Cache.NOTHING;
+  }
 
   abstract installRustup(): Promise<void>;
 
-  async installChannel(channel: string): Promise<void> {
-    await exec.exec(toolname, ['default', channel]);
-    core.info(`Toolchain "${channel}" successfully installed.`);
-    this.channel = channel;
+  async installChannel(): Promise<void> {
+    await exec.exec(toolname, ['default', this.actionInputs.channel]);
+    core.info(
+      `Toolchain "${this.actionInputs.channel}" successfully installed.`
+    );
   }
 
-  async setProfile(profile: Profile): Promise<void> {
-    await exec.exec(toolname, ['set', 'profile', profile]);
-    core.info(`Profile "${profile}" is now new rustup profile.`);
+  async setProfile(): Promise<void> {
+    await exec.exec(toolname, ['set', 'profile', this.actionInputs.profile]);
+    core.info(
+      `Profile "${this.actionInputs.profile}" is now new rustup profile.`
+    );
   }
 
-  async ensureComponents(components: string[]): Promise<void> {
-    components = [...new Set(components)];
-    await exec.exec(toolname, ['component', 'add', ...components]);
+  async installComponents(): Promise<void> {
+    if (this.actionInputs.profile === Profile.COMPLETE) {
+      await this.ensureAllComponents();
+    } else {
+      await this.ensureComponents(this.actionInputs.components);
+    }
   }
 
-  async ensureAllComponents(): Promise<void> {
+  private async ensureComponents(components: string[]): Promise<void> {
+    await exec.exec(toolname, ['component', 'add', ...new Set(components)]);
+  }
+
+  private async ensureAllComponents(): Promise<void> {
     const output = await exec.getExecOutput(toolname, ['component', 'list']);
     const components: string[] = [];
     for (const c of output.stdout.split('\n')) {
@@ -48,53 +81,121 @@ export default abstract class Installer {
         components.push(c.trim());
       }
     }
+    this.actionInputs.components = components;
     await this.ensureComponents(components);
   }
 
-  async installBinstall(): Promise<void> {
-    if (this.channel === null) {
-      core.error('No installed toolchain');
-      throw new Error('this.channel should not be null');
+  private async saveSubcommandsCache(): Promise<void> {
+    core.info('Checking whether subcommands cache should be saved');
+
+    const packageInformation = (
+      await exec.getExecOutput(toolname, [
+        'run',
+        this.actionInputs.channel,
+        'cargo',
+        'install',
+        '--list'
+      ])
+    ).stdout;
+    core.info(`Computing key for packages:\n${packageInformation}`);
+
+    const packageInformationKey = crypto
+      .createHash('sha256')
+      .update(packageInformation)
+      .digest('base64');
+
+    const expectedKey = `${BIN_BASE_CACHE_KEY}-${this.requestedPackagesKey}-${packageInformationKey}`;
+    core.debug(`Expected key: ${expectedKey}`);
+    core.debug(`Restored key: ${this.restoredKey ?? 'null'}`);
+
+    if (this.restoredKey !== expectedKey) {
+      core.info('Cache key match not found. Saving cache...');
+      await cache.saveCache(BIN_CACHE_PATHS, expectedKey);
+      core.info('Subcommands cache saved successfully');
     }
+  }
+
+  private async restoreSubcommadsCache(): Promise<void> {
+    core.info('Trying to restore subcommands cache');
+
+    this.restoredKey =
+      (await cache.restoreCache(
+        BIN_CACHE_PATHS,
+        `${BIN_BASE_CACHE_KEY}-${this.requestedPackagesKey}`,
+        [BIN_BASE_CACHE_KEY]
+      )) ?? null;
+
+    if (this.restoredKey === null) {
+      core.info('Cache miss');
+    } else {
+      core.info(`Restored cache with key: ${this.restoredKey}`);
+    }
+  }
+
+  private async installBinstall(): Promise<void> {
+    core.info('Installing cargo-binstall...');
 
     await exec.exec(toolname, [
       'run',
-      this.channel,
+      this.actionInputs.channel,
       'cargo',
       'install',
+      ...(this.actionInputs.cache === Cache.NOTHING
+        ? []
+        : ['--root', ROOT_INSTALL_PATH]),
       'cargo-binstall'
     ]);
   }
 
-  async uninstallBinstall(): Promise<void> {
-    if (this.channel === null) {
-      core.error('No installed toolchain');
-      throw new Error('this.channel should not be null');
-    }
-
+  private async uninstallBinstall(): Promise<void> {
+    core.info('Uninstalling cargo-binstall');
     await exec.exec(toolname, [
       'run',
-      this.channel,
+      this.actionInputs.channel,
       'cargo',
       'uninstall',
       'cargo-binstall'
     ]);
   }
 
-  async ensureSubcommands(subcommands: string[]): Promise<void> {
-    subcommands = [...new Set(subcommands)];
-    if (this.channel === null) {
-      core.error('No installed toolchain');
-      throw new Error('this.channel should not be null');
+  async installSubcommands(): Promise<void> {
+    const subcommands = this.actionInputs.subcommands.filter(
+      subcommand => subcommand !== 'cargo-binstall'
+    );
+
+    if (this.actionInputs.subcommands.length > 0) {
+      if (this.saveBinCache) {
+        await this.restoreSubcommadsCache();
+
+        core.info(`Adding ${SUBCOMMANDS_PATH} to path`);
+        core.addPath(SUBCOMMANDS_PATH);
+      }
+
+      core.info('Performing installation of cargo subcommands...');
+      await this.installBinstall();
+
+      if (subcommands.length > 0) {
+        await exec.exec(toolname, [
+          'run',
+          this.actionInputs.channel,
+          'cargo',
+          'binstall',
+          '--no-confirm',
+          '--disable-telemetry',
+          ...(this.actionInputs.cache === Cache.ALL
+            ? ['--root', ROOT_INSTALL_PATH]
+            : []),
+          ...subcommands
+        ]);
+      }
+
+      if (this.saveBinCache) {
+        await this.saveSubcommandsCache();
+      }
+
+      if (!this.actionInputs.subcommands.includes('cargo-binstall')) {
+        await this.uninstallBinstall();
+      }
     }
-    await exec.exec(toolname, [
-      'run',
-      this.channel,
-      'cargo',
-      'binstall',
-      '--no-confirm',
-      '--disable-telemetry',
-      ...subcommands
-    ]);
   }
 }

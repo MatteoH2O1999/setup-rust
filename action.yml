@@ -17,6 +17,9 @@ inputs:
   subcommands:
     description: The cargo subcommands to install
     required: false
+  cache:
+    description: Whether to cache nothing, cargo-binstall or all the subcommands requested
+    default: false
 runs:
   using: node24
   main: dist/index.js

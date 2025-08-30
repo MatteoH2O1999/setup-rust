@@ -18,7 +18,8 @@ export enum InputNames {
   CHANNEL = 'channel',
   PROFILE = 'profile',
   COMPONENTS = 'components',
-  SUBCOMMANDS = 'subcommands'
+  SUBCOMMANDS = 'subcommands',
+  CACHE = 'cache'
 }
 
 const toolname = 'rustup';
