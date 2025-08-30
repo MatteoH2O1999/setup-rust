@@ -99,7 +99,7 @@ export default abstract class Installer {
         'install',
         '--list',
         '--root',
-        SUBCOMMANDS_PATH
+        ROOT_INSTALL_PATH
       ])
     ).stdout;
     core.info(`Computing key for packages:\n${packageInformation}`);
