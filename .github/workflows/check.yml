@@ -7,6 +7,7 @@ on:
         description: The channel to use
         required: true
         type: string
+        default: stable
       profile:
         description: The profile to use
         required: true
