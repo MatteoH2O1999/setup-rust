@@ -125,6 +125,8 @@ export default abstract class Installer {
       core.info('Cache key match not found. Saving cache...');
       await cache.saveCache(BIN_CACHE_PATHS, expectedKey);
       core.info('Subcommands cache saved successfully');
+    } else {
+      core.info('Cache key match found. Cache is up to date');
     }
   }
 
