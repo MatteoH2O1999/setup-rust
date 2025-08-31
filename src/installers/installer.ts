@@ -26,7 +26,11 @@ import {toolname} from '../constants';
 const ROOT_INSTALL_PATH = path.join(os.homedir(), 'setup-rust', '.cargo');
 const SUBCOMMANDS_PATH = path.join(ROOT_INSTALL_PATH, 'bin');
 const BIN_BASE_CACHE_KEY = 'setup-rust-bin';
-const BIN_CACHE_PATHS = [SUBCOMMANDS_PATH];
+const BIN_CACHE_PATHS = [
+  SUBCOMMANDS_PATH,
+  path.join(ROOT_INSTALL_PATH, '.crates.toml'),
+  path.join(ROOT_INSTALL_PATH, '.crates2.json')
+];
 
 export default abstract class Installer {
   private readonly actionInputs;
