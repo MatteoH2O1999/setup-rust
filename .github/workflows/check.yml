@@ -79,7 +79,7 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Download built action
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: built-action
       - name: Test action
