@@ -23,3 +23,4 @@ Simple usage of this action:
 |`profile`|The profile to use (either `minimal`, `default` or `complete`)|`minimal`|
 |`components`|The list of additional components to install (`clippy`, `rustfmt`, etc.)|`None`|
 |`subcommands`|The list of cargo subcommands to install|`None`|
+|`cache`|What to cache (`false`, `binstall` or `all`)|`false`|
