@@ -42,7 +42,10 @@ export default abstract class Installer {
   constructor(actionInputs: ActionInputs) {
     this.actionInputs = actionInputs;
 
-    const requestedPackages = this.actionInputs.subcommands.sort().join(', ');
+    const requestedPackages =
+      this.actionInputs.cache === Cache.ALL
+        ? this.actionInputs.subcommands.sort().join(', ')
+        : 'binstall';
     this.requestedPackagesKey = crypto
       .createHash('sha256')
       .update(requestedPackages)
